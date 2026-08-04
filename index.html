@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteio e Carta FIFA</title>
+    
+    <!-- Fonte Padrão (Semelhante ao Gemini) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==================== 
+           VARIÁVEIS DE TEMA (CLARO/ESCURO)
+           ==================== */
+        :root {
+            --bg-color: #f0f2f5;
+            --text-color: #202124;
+            --card-bg: #ffffff;
+            --border-color: #dadce0;
+            --btn-bg: #1a73e8;
+            --btn-text: #ffffff;
+            --fifa-gold: #e2c58a;
+        }
+
+        body.dark-mode {
+            --bg-color: #202124;
+            --text-color: #e8eaed;
+            --card-bg: #2d2e30;
+            --border-color: #5f6368;
+            --btn-bg: #8ab4f8;
+            --btn-text: #202124;
+        }
+
+        /* ==================== 
+           ESTILOS GERAIS
+           ==================== */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        header {
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            justify-content: flex-end;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: var(--btn-bg);
+            color: var(--btn-text);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            margin-top: 20px;
+        }
+
+        /* ==================== 
+           ROLETA
+           ==================== */
+        .roulette-container {
+            text-align: center;
+        }
+
+        #roulette-display {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            min-width: 250px;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            background-color: var(--card-bg);
+        }
+
+        /* ==================== 
+           CARTA FIFA (Layout Baseado na Referência)
+           ==================== */
+        .fifa-card {
+            width: 300px;
+            height: 420px;
+            background: linear-gradient(135deg, #fefefe, var(--fifa-gold));
+            border-radius: 20px;
+            position: relative;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            color: #333; /* Texto escuro padrão da carta de ídolo */
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card-rating {
+            position: absolute;
+            top: 30px;
+            left: 25px;
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .card-position {
+            position: absolute;
+            top: 70px;
+            left: 25px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .drop-zone {
+            margin-top: 50px;
+            width: 200px;
+            height: 200px;
+            border: 2px dashed #999;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #666;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+            transition: border-color 0.3s;
+            z-index: 2; /* Fica acima do fundo */
+        }
+
+        .drop-zone.drag-active {
+            border-color: #1a73e8;
+            background-color: rgba(26, 115, 232, 0.1);
+        }
+
+        .drop-zone span {
+            pointer-events: none;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .card-name {
+            font-size: 28px;
+            font-weight: 700;
+            margin-top: 15px;
+            text-transform: uppercase;
+            border-bottom: 2px solid rgba(0,0,0,0.1);
+            width: 80%;
+            text-align: center;
+            padding-bottom: 5px;
+            z-index: 2;
+        }
+
+        .card-stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            z-index: 2;
+        }
+        
+        .stat-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <button id="theme-btn">Escuro / Claro</button>
+    </header>
+
+    <div class="container">
+        
+        <!-- Área da Roleta -->
+        <div class="roulette-container">
+            <div id="roulette-display">Pronto para sortear?</div>
+            <button id="spin-btn">Sortear Nome</button>
+        </div>
+
+        <!-- Área da Carta -->
+        <div class="fifa-card" id="card">
+            <!-- Informações do Canto Superior Esquerdo -->
+            <div class="card-rating">91</div>
+            <div class="card-position">CAM</div>
+
+            <!-- Área de Arrastar a Foto -->
+            <div class="drop-zone" id="drop-zone">
+                <span id="drop-text">Arraste a foto da pessoa aqui</span>
+            </div>
+
+            <!-- Nome Sorteado -->
+            <div class="card-name" id="card-name">Zico</div>
+
+            <!-- Status Inferiores Estáticos (como no exemplo) -->
+            <div class="card-stats">
+                <div class="stat-col"><span>PAC</span><span>89</span></div>
+                <div class="stat-col"><span>SHO</span><span>92</span></div>
+                <div class="stat-col"><span>PAS</span><span>91</span></div>
+                <div class="stat-col"><span>DRI</span><span>91</span></div>
+                <div class="stat-col"><span>DEF</span><span>62</span></div>
+                <div class="stat-col"><span>PHY</span><span>71</span></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        /* ==================== 
+           1. LÓGICA DO TEMA
+           ==================== */
+        const themeBtn = document.getElementById('theme-btn');
+        
+        // Verifica preferência salva
+        if(localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+
+        themeBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            // Salva a preferência
+            if(document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('theme', 'dark');
+            } else {
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        /* ==================== 
+           2. LÓGICA DA ROLETA
+           ==================== */
+        const names = ['Aliffer', 'Júlio', 'Ana', 'Gabriela', 'Giseli', 'Karen', 'Thainá', 'Iris', 'Flávio'];
+        const spinBtn = document.getElementById('spin-btn');
+        const display = document.getElementById('roulette-display');
+        const cardName = document.getElementById('card-name');
+        
+        let spinning = false;
+
+        spinBtn.addEventListener('click', () => {
+            if (spinning) return; // Evita múltiplos cliques
+            spinning = true;
+            spinBtn.textContent = 'Sorteando...';
+
+            let counter = 0;
+            // Cria um loop que muda o nome rapidamente
+            const interval = setInterval(() => {
+                const randomName = names[Math.floor(Math.random() * names.length)];
+                display.textContent = randomName;
+                counter++;
+            }, 100); // 100ms
+
+            // Para a roleta após 2.5 segundos
+            setTimeout(() => {
+                clearInterval(interval);
+                // Define o nome final
+                const finalName = names[Math.floor(Math.random() * names.length)];
+                display.textContent = `Sorteado: ${finalName}!`;
+                cardName.textContent = finalName; // Atualiza a carta
+                
+                spinning = false;
+                spinBtn.textContent = 'Sortear Novo Nome';
+            }, 2500);
+        });
+
+        /* ==================== 
+           3. LÓGICA DE DRAG & DROP (FOTO)
+           ==================== */
+        const dropZone = document.getElementById('drop-zone');
+        const dropText = document.getElementById('drop-text');
+
+        // Previne o comportamento padrão do navegador (que seria abrir a imagem em outra aba)
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-active');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-active');
+        });
+
+        // Quando o arquivo é solto na área
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-active');
+
+            // Pega o primeiro arquivo arrastado
+            const file = e.dataTransfer.files[0];
+            
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                
+                // Quando terminar de ler a imagem
+                reader.onload = (event) => {
+                    // Define a imagem como background da área
+                    dropZone.style.backgroundImage = `url('${event.target.result}')`;
+                    dropZone.style.border = 'none'; // Remove a borda tracejada
+                    dropText.style.display = 'none'; // Esconde o texto
+                };
+                
+                // Lê o arquivo como uma Data URL (base64)
+                reader.readAsDataURL(file);
+            } else {
+                alert('Por favor, arraste um arquivo de imagem válido.');
+            }
+        });
+    </script>
+</body>
+</html>
