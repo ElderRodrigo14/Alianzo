@@ -5,35 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sorteio e Carta FIFA</title>
     
-    <!-- Fonte Padrão (Semelhante ao Gemini) -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     
     <style>
         /* ==================== 
-           VARIÁVEIS DE TEMA (CLARO/ESCURO)
+           VARIÁVEIS DE TEMA
            ==================== */
         :root {
             --bg-color: #f0f2f5;
             --text-color: #202124;
-            --card-bg: #ffffff;
+            --container-bg: #ffffff;
             --border-color: #dadce0;
             --btn-bg: #1a73e8;
             --btn-text: #ffffff;
-            --fifa-gold: #e2c58a;
         }
 
         body.dark-mode {
-            --bg-color: #202124;
+            --bg-color: #171717;
             --text-color: #e8eaed;
-            --card-bg: #2d2e30;
-            --border-color: #5f6368;
+            --container-bg: #212121;
+            --border-color: #444;
             --btn-bg: #8ab4f8;
             --btn-text: #202124;
         }
 
-        /* ==================== 
-           ESTILOS GERAIS
-           ==================== */
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-color);
@@ -58,132 +53,143 @@
             background-color: var(--btn-bg);
             color: var(--btn-text);
             border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
+            padding: 12px 24px;
+            border-radius: 8px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: opacity 0.2s;
+            transition: opacity 0.2s, transform 0.1s;
         }
 
-        button:hover {
-            opacity: 0.8;
+        button:active {
+            transform: scale(0.98);
         }
 
-        .container {
-            display: flex;
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ==================== 
+           GERENCIAMENTO DE SEÇÕES
+           ==================== */
+        .section {
+            display: none; /* Esconde todas as seções por padrão */
             flex-direction: column;
             align-items: center;
-            gap: 40px;
-            margin-top: 20px;
+            gap: 20px;
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .section.active {
+            display: flex; /* Mostra apenas a seção ativa */
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* ==================== 
            ROLETA
            ==================== */
-        .roulette-container {
-            text-align: center;
-        }
-
         #roulette-display {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            min-width: 250px;
-            padding: 15px;
+            font-size: 40px;
+            font-weight: 900;
+            padding: 20px 40px;
             border: 2px solid var(--border-color);
-            border-radius: 10px;
-            background-color: var(--card-bg);
+            border-radius: 12px;
+            background-color: var(--container-bg);
+            min-width: 300px;
+            text-transform: uppercase;
         }
 
         /* ==================== 
-           CARTA FIFA (Layout Baseado na Referência)
+           ÁREA DE UPLOAD DA FOTO
            ==================== */
-        .fifa-card {
-            width: 300px;
-            height: 420px;
-            background: linear-gradient(135deg, #fefefe, var(--fifa-gold));
-            border-radius: 20px;
-            position: relative;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            color: #333; /* Texto escuro padrão da carta de ídolo */
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .card-rating {
-            position: absolute;
-            top: 30px;
-            left: 25px;
-            font-size: 36px;
-            font-weight: 700;
-            line-height: 1;
-        }
-
-        .card-position {
-            position: absolute;
-            top: 70px;
-            left: 25px;
-            font-size: 18px;
-            font-weight: 600;
-        }
-
         .drop-zone {
-            margin-top: 50px;
-            width: 200px;
+            width: 300px;
             height: 200px;
-            border: 2px dashed #999;
-            border-radius: 10px;
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
             display: flex;
             justify-content: center;
             align-items: center;
-            text-align: center;
-            color: #666;
+            background-color: var(--container-bg);
             cursor: pointer;
-            background-size: cover;
+            background-size: contain;
+            background-repeat: no-repeat;
             background-position: center;
-            transition: border-color 0.3s;
-            z-index: 2; /* Fica acima do fundo */
+            position: relative;
+            overflow: hidden;
         }
 
         .drop-zone.drag-active {
-            border-color: #1a73e8;
-            background-color: rgba(26, 115, 232, 0.1);
+            border-color: var(--btn-bg);
         }
 
-        .drop-zone span {
-            pointer-events: none;
-            padding: 10px;
-            font-size: 14px;
+        /* Input de arquivo invisível sobreposto na drop-zone para permitir clique */
+        #file-input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
         }
 
-        .card-name {
-            font-size: 28px;
-            font-weight: 700;
-            margin-top: 15px;
-            text-transform: uppercase;
-            border-bottom: 2px solid rgba(0,0,0,0.1);
-            width: 80%;
+        /* ==================== 
+           CARTA FINAL (MÁSCARA DE IMAGEM)
+           ==================== */
+        .fifa-card-container {
+            width: 350px; /* Largura da sua imagem base */
+            height: 490px; /* Altura da sua imagem base */
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px; /* Ajuste se sua imagem tiver cantos arredondados */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        /* Imagem de Fundo (A arte que você tem) */
+        .template-bg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* 
+           A FOTO DA PESSOA 
+           ATENÇÃO: Você precisará ajustar top, left, width e height 
+           abaixo para encaixar perfeitamente no buraco da sua arte.
+        */
+        .player-photo {
+            position: absolute;
+            top: 15%;      /* Ajuste a posição vertical */
+            left: 25%;     /* Ajuste a posição horizontal */
+            width: 50%;    /* Ajuste o tamanho da foto */
+            height: 40%;   /* Ajuste a altura da foto */
+            object-fit: cover; /* Mantém a proporção da foto inserida */
+            z-index: 2;    /* Fica por cima da imagem base */
+            /* border-radius: 50%; Use isso caso queira a foto redonda */
+        }
+
+        /* O NOME DA PESSOA NA CARTA */
+        .player-name {
+            position: absolute;
+            bottom: 30%;   /* Ajuste a altura onde o nome deve aparecer */
+            width: 100%;
             text-align: center;
-            padding-bottom: 5px;
-            z-index: 2;
-        }
-
-        .card-stats {
-            display: flex;
-            gap: 15px;
-            margin-top: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            z-index: 2;
-        }
-        
-        .stat-col {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            font-size: 28px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #333;   /* Cor do nome, altere conforme sua arte */
+            z-index: 3;
+            letter-spacing: 1px;
         }
 
     </style>
@@ -194,138 +200,153 @@
         <button id="theme-btn">Escuro / Claro</button>
     </header>
 
-    <div class="container">
+    <!-- ETAPA 1: ROLETA -->
+    <div class="section active" id="section-roulette">
+        <h2>Sorteio de Nomes</h2>
+        <div id="roulette-display">?</div>
+        <button id="spin-btn">Girar Roleta</button>
+        <p id="timer-msg" style="display: none; color: #888; margin-top: 15px;">Aguarde 5 segundos para a próxima etapa...</p>
+    </div>
+
+    <!-- ETAPA 2: INSERIR FOTO -->
+    <div class="section" id="section-upload">
+        <h2 id="drawn-name-title">Nome Sorteado</h2>
+        <p>Insira a foto para a carta:</p>
+        <div class="drop-zone" id="drop-zone">
+            <span id="drop-text">Clique ou arraste a foto aqui</span>
+            <input type="file" id="file-input" accept="image/*">
+        </div>
+        <button id="generate-btn" disabled>Gerar Card</button>
+    </div>
+
+    <!-- ETAPA 3: CARTA FINAL -->
+    <div class="section" id="section-card">
+        <h2>Card Gerado com Sucesso!</h2>
         
-        <!-- Área da Roleta -->
-        <div class="roulette-container">
-            <div id="roulette-display">Pronto para sortear?</div>
-            <button id="spin-btn">Sortear Nome</button>
+        <div class="fifa-card-container">
+            <!-- SUA IMAGEM BASE AQUI -->
+            <img src="Imagem Teste.png" alt="Template FIFA" class="template-bg">
+            
+            <!-- FOTO DO ROSTO (Dinâmica) -->
+            <img id="final-photo" class="player-photo" src="" style="display: none;">
+            
+            <!-- NOME (Dinâmico) -->
+            <div id="final-name" class="player-name">NOME</div>
         </div>
-
-        <!-- Área da Carta -->
-        <div class="fifa-card" id="card">
-            <!-- Informações do Canto Superior Esquerdo -->
-            <div class="card-rating">91</div>
-            <div class="card-position">CAM</div>
-
-            <!-- Área de Arrastar a Foto -->
-            <div class="drop-zone" id="drop-zone">
-                <span id="drop-text">Arraste a foto da pessoa aqui</span>
-            </div>
-
-            <!-- Nome Sorteado -->
-            <div class="card-name" id="card-name">Zico</div>
-
-            <!-- Status Inferiores Estáticos (como no exemplo) -->
-            <div class="card-stats">
-                <div class="stat-col"><span>PAC</span><span>89</span></div>
-                <div class="stat-col"><span>SHO</span><span>92</span></div>
-                <div class="stat-col"><span>PAS</span><span>91</span></div>
-                <div class="stat-col"><span>DRI</span><span>91</span></div>
-                <div class="stat-col"><span>DEF</span><span>62</span></div>
-                <div class="stat-col"><span>PHY</span><span>71</span></div>
-            </div>
-        </div>
-
+        
+        <button onclick="location.reload()" style="margin-top: 20px;">Fazer Novo Sorteio</button>
     </div>
 
     <script>
         /* ==================== 
-           1. LÓGICA DO TEMA
+           TEMA (Claro/Escuro)
            ==================== */
         const themeBtn = document.getElementById('theme-btn');
+        if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
         
-        // Verifica preferência salva
-        if(localStorage.getItem('theme') === 'dark') {
-            document.body.classList.add('dark-mode');
-        }
-
         themeBtn.addEventListener('click', () => {
             document.body.classList.toggle('dark-mode');
-            // Salva a preferência
-            if(document.body.classList.contains('dark-mode')) {
-                localStorage.setItem('theme', 'dark');
-            } else {
-                localStorage.setItem('theme', 'light');
-            }
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
         });
 
         /* ==================== 
-           2. LÓGICA DA ROLETA
+           VARIÁVEIS DE ESTADO E DOM
            ==================== */
         const names = ['Aliffer', 'Júlio', 'Ana', 'Gabriela', 'Giseli', 'Karen', 'Thainá', 'Iris', 'Flávio'];
+        let selectedName = "";
+        let uploadedImageSrc = "";
+
+        // Elementos UI
+        const sectionRoulette = document.getElementById('section-roulette');
+        const sectionUpload = document.getElementById('section-upload');
+        const sectionCard = document.getElementById('section-card');
+        
         const spinBtn = document.getElementById('spin-btn');
         const display = document.getElementById('roulette-display');
-        const cardName = document.getElementById('card-name');
+        const timerMsg = document.getElementById('timer-msg');
         
-        let spinning = false;
-
-        spinBtn.addEventListener('click', () => {
-            if (spinning) return; // Evita múltiplos cliques
-            spinning = true;
-            spinBtn.textContent = 'Sorteando...';
-
-            let counter = 0;
-            // Cria um loop que muda o nome rapidamente
-            const interval = setInterval(() => {
-                const randomName = names[Math.floor(Math.random() * names.length)];
-                display.textContent = randomName;
-                counter++;
-            }, 100); // 100ms
-
-            // Para a roleta após 2.5 segundos
-            setTimeout(() => {
-                clearInterval(interval);
-                // Define o nome final
-                const finalName = names[Math.floor(Math.random() * names.length)];
-                display.textContent = `Sorteado: ${finalName}!`;
-                cardName.textContent = finalName; // Atualiza a carta
-                
-                spinning = false;
-                spinBtn.textContent = 'Sortear Novo Nome';
-            }, 2500);
-        });
-
-        /* ==================== 
-           3. LÓGICA DE DRAG & DROP (FOTO)
-           ==================== */
+        const generateBtn = document.getElementById('generate-btn');
+        const fileInput = document.getElementById('file-input');
         const dropZone = document.getElementById('drop-zone');
         const dropText = document.getElementById('drop-text');
 
-        // Previne o comportamento padrão do navegador (que seria abrir a imagem em outra aba)
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('drag-active');
+        /* ==================== 
+           ETAPA 1: LÓGICA DA ROLETA E TIMER
+           ==================== */
+        spinBtn.addEventListener('click', () => {
+            spinBtn.disabled = true;
+            
+            let counter = 0;
+            // Efeito da roleta rodando
+            const interval = setInterval(() => {
+                display.textContent = names[Math.floor(Math.random() * names.length)];
+                counter++;
+            }, 100);
+
+            // Para a roleta após 2 segundos
+            setTimeout(() => {
+                clearInterval(interval);
+                selectedName = names[Math.floor(Math.random() * names.length)];
+                display.textContent = selectedName;
+                
+                // Exibe a mensagem de espera
+                timerMsg.style.display = 'block';
+
+                // Timer de 5 Segundos após parar a roleta
+                setTimeout(() => {
+                    // Preenche o título da próxima etapa
+                    document.getElementById('drawn-name-title').textContent = `Sorteado(a): ${selectedName}`;
+                    
+                    // Troca as telas
+                    sectionRoulette.classList.remove('active');
+                    sectionUpload.classList.add('active');
+                }, 5000); // 5000ms = 5 segundos
+
+            }, 2000);
         });
 
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('drag-active');
-        });
+        /* ==================== 
+           ETAPA 2: UPLOAD DA FOTO
+           ==================== */
+        function handleFile(file) {
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    uploadedImageSrc = event.target.result;
+                    dropZone.style.backgroundImage = `url('${uploadedImageSrc}')`;
+                    dropText.style.display = 'none';
+                    generateBtn.disabled = false; // Libera o botão de gerar
+                };
+                reader.readAsDataURL(file);
+            }
+        }
 
-        // Quando o arquivo é solto na área
+        // Upload via Clique (Input hidden)
+        fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+        // Drag & Drop
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-active'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-active'));
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropZone.classList.remove('drag-active');
+            handleFile(e.dataTransfer.files[0]);
+        });
 
-            // Pega o primeiro arquivo arrastado
-            const file = e.dataTransfer.files[0];
+        /* ==================== 
+           ETAPA 3: GERAR CARTA
+           ==================== */
+        generateBtn.addEventListener('click', () => {
+            // Atualiza o DOM da carta final
+            document.getElementById('final-name').textContent = selectedName;
             
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                
-                // Quando terminar de ler a imagem
-                reader.onload = (event) => {
-                    // Define a imagem como background da área
-                    dropZone.style.backgroundImage = `url('${event.target.result}')`;
-                    dropZone.style.border = 'none'; // Remove a borda tracejada
-                    dropText.style.display = 'none'; // Esconde o texto
-                };
-                
-                // Lê o arquivo como uma Data URL (base64)
-                reader.readAsDataURL(file);
-            } else {
-                alert('Por favor, arraste um arquivo de imagem válido.');
-            }
+            const finalPhoto = document.getElementById('final-photo');
+            finalPhoto.src = uploadedImageSrc;
+            finalPhoto.style.display = 'block'; // Mostra a foto que estava escondida
+
+            // Troca as telas
+            sectionUpload.classList.remove('active');
+            sectionCard.classList.add('active');
         });
     </script>
 </body>
